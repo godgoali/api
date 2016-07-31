@@ -88,6 +88,25 @@ def post_whitelist():
     return str(domain_id)
 
 
+@app.route("/dns/whitelist/<int:domain_id>", methods=["GET"])
+def get_whitelist_id(domain_id):
+    pihole = Pihole()
+
+    domains = [item for item in pihole.get_raw_whitelist() if item.get_id() == domain_id]
+
+    if len(domains) == 0:
+        return error("does_not_exist", "No domain found for that id")
+    elif len(domains) > 1:
+        return error("unknown", "Unknown error")
+
+    domain = domains[0]
+
+    return json.dumps({
+        "id": domain.get_id(),
+        "domain": domain.get_domain()
+    })
+
+
 @app.route("/dns/whitelist/<int:domain_id>", methods=["DELETE"])
 def delete_whitelist_id(domain_id):
     pihole = Pihole()
@@ -138,6 +157,25 @@ def post_blacklist():
                  if item.get_domain() == domain][0]
 
     return str(domain_id)
+
+
+@app.route("/dns/blacklist/<int:domain_id>", methods=["GET"])
+def get_blacklist_id(domain_id):
+    pihole = Pihole()
+
+    domains = [item for item in pihole.get_raw_blacklist() if item.get_id() == domain_id]
+
+    if len(domains) == 0:
+        return error("does_not_exist", "No domain found for that id")
+    elif len(domains) > 1:
+        return error("unknown", "Unknown error")
+
+    domain = domains[0]
+
+    return json.dumps({
+        "id": domain.get_id(),
+        "domain": domain.get_domain()
+    })
 
 
 @app.route("/dns/blacklist/<int:domain_id>", methods=["DELETE"])
