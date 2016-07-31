@@ -29,7 +29,6 @@ import json
 
 
 app = Flask(__name__)
-pihole = Pihole()
 
 
 def error(code, message, fields):
@@ -55,6 +54,7 @@ def handle_error(e):
 
 @app.route("/dns/whitelist", methods=["GET"])
 def get_whitelist():
+    pihole = Pihole()
     whitelist = pihole.get_raw_whitelist()
 
     result = []
@@ -69,6 +69,7 @@ def get_whitelist():
 
 @app.route("/dns/whitelist", methods=["POST"])
 def post_whitelist():
+    pihole = Pihole()
     domain = request.form["domain"]
 
     if domain is not None:
@@ -87,6 +88,7 @@ def post_whitelist():
 
 @app.route("/dns/blacklist", methods=["GET"])
 def get_blacklist():
+    pihole = Pihole()
     blacklist = pihole.get_raw_blacklist()
 
     result = []
@@ -101,6 +103,7 @@ def get_blacklist():
 
 @app.route("/dns/blacklist", methods=["POST"])
 def post_blacklist():
+    pihole = Pihole()
     domain = request.form["domain"]
 
     if domain is not None:
