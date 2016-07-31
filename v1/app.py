@@ -22,13 +22,43 @@
 
 from pihole import Pihole
 from flask import Flask
+import json
 
 
 # SCRIPT
 
 
 app = Flask(__name__)
+pihole = Pihole()
+
+
+@app.route("/dns/whitelist", methods=["GET"])
+def get_whitelist():
+    whitelist = pihole.get_raw_whitelist()
+
+    result = []
+    for item in whitelist:
+        result.append({
+            "domain": item.get_domain(),
+            "id": item.get_id()
+        })
+
+    return json.dumps(result)
+
+
+@app.route("/dns/blacklist", methods=["GET"])
+def get_blacklist():
+    blacklist = pihole.get_raw_blacklist()
+
+    result = []
+    for item in blacklist:
+        result.append({
+            "domain": item.get_domain(),
+            "id": item.get_id()
+        })
+
+    return json.dumps(result)
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80)
+    app.run(host="0.0.0.0", port=8080)
