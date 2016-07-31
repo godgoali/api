@@ -45,6 +45,11 @@ def page_not_found(e):
     return open("/var/www/html/pihole/index.html").read()
 
 
+@app.errorhandler(500)
+def handle_error(e):
+    return error(error_codes["unknown"], "Unknown error", "")
+
+
 # DNS
 
 
