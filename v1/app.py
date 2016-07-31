@@ -33,7 +33,7 @@ app = Flask(__name__)
 
 def error(code, message):
     return json.dumps({
-        "code": code,
+        "code": error_codes[code],
         "message": message
     })
 
@@ -45,12 +45,12 @@ def page_not_found(e):
 
 @app.errorhandler(400)
 def unknown_action(e):
-    return error(error_codes["incorrect_params"], "Unknown action or incorrect params")
+    return error("incorrect_params", "Unknown action or incorrect params")
 
 
 @app.errorhandler(500)
 def handle_error(e):
-    return error(error_codes["unknown"], "Unknown error")
+    return error("unknown", "Unknown error")
 
 
 # DNS
@@ -95,9 +95,9 @@ def delete_whitelist_id(domain_id):
                if item.get_id() == domain_id]
 
     if len(domains) == 0:
-        return error(error_codes["does_not_exist"], "No domain found for that id")
+        return error("does_not_exist", "No domain found for that id")
     elif len(domains) > 1:
-        return error(error_codes["unknown"], "Unknown error")
+        return error("unknown", "Unknown error")
 
     refresh = pihole.remove_whitelist(domains[0])
 
@@ -147,9 +147,9 @@ def delete_blacklist_id(domain_id):
                if item.get_id() == domain_id]
 
     if len(domains) == 0:
-        return error(error_codes["does_not_exist"], "No domain found for that id")
+        return error("does_not_exist", "No domain found for that id")
     elif len(domains) > 1:
-        return error(error_codes["unknown"], "Unknown error")
+        return error("unknown", "Unknown error")
 
     refresh = pihole.remove_blacklist(domains[0])
 
