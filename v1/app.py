@@ -201,7 +201,3 @@ def delete_blacklist_id(domain_id):
         restart_dns()
 
     return str(error_codes["success"])
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
