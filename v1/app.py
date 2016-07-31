@@ -86,6 +86,26 @@ def post_whitelist():
     return error(error_codes["incorrect_params"], "Incorrect parameters", "")
 
 
+@app.route("/dns/whitelist/<int:domain_id>", methods=["DELETE"])
+def delete_whitelist_id(domain_id):
+    pihole = Pihole()
+    domains = [item.get_domain() for item in pihole.get_raw_whitelist()
+               if item.get_id() == domain_id]
+
+    if len(domains) == 0:
+        return error(error_codes["does_not_exist"], "No domain found for that id", "")
+    elif len(domains) > 1:
+        return error(error_codes["unknown"], "Unknown error", "")
+
+    refresh = pihole.remove_whitelist(domains[0])
+
+    if refresh:
+        pihole.export_hosts()
+        restart_gravity()
+
+    return str(error_codes["success"])
+
+
 @app.route("/dns/blacklist", methods=["GET"])
 def get_blacklist():
     pihole = Pihole()
@@ -118,6 +138,26 @@ def post_blacklist():
 
         return str(domain_id)
     return error(error_codes["incorrect_params"], "Incorrect parameters", "")
+
+
+@app.route("/dns/blacklist/<int:domain_id>", methods=["DELETE"])
+def delete_blacklist_id(domain_id):
+    pihole = Pihole()
+    domains = [item.get_domain() for item in pihole.get_raw_blacklist()
+               if item.get_id() == domain_id]
+
+    if len(domains) == 0:
+        return error(error_codes["does_not_exist"], "No domain found for that id", "")
+    elif len(domains) > 1:
+        return error(error_codes["unknown"], "Unknown error", "")
+
+    refresh = pihole.remove_blacklist(domains[0])
+
+    if refresh:
+        pihole.export_hosts()
+        restart_gravity()
+
+    return str(error_codes["success"])
 
 
 if __name__ == "__main__":
