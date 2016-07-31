@@ -20,8 +20,9 @@
 # IMPORTS
 
 
-from pihole import Pihole, restart_gravity, error_codes
+from pihole import Pihole, error_codes
 from flask import Flask, request
+from subprocess import call
 import json
 
 
@@ -36,6 +37,10 @@ def error(code, message):
         "code": error_codes[code],
         "message": message
     })
+
+
+def restart_dns():
+    call(["sudo", "pihole", "refresh"])
 
 
 @app.errorhandler(404)
@@ -80,7 +85,7 @@ def post_whitelist():
 
     if refresh:
         pihole.export_hosts()
-        restart_gravity()
+        restart_dns()
 
     domain_id = [item.get_id() for item in pihole.get_raw_whitelist()
                  if item.get_domain() == domain][0]
@@ -122,7 +127,7 @@ def delete_whitelist_id(domain_id):
 
     if refresh:
         pihole.export_hosts()
-        restart_gravity()
+        restart_dns()
 
     return str(error_codes["success"])
 
@@ -151,7 +156,7 @@ def post_blacklist():
 
     if refresh:
         pihole.export_hosts()
-        restart_gravity()
+        restart_dns()
 
     domain_id = [item.get_id() for item in pihole.get_raw_blacklist()
                  if item.get_domain() == domain][0]
@@ -193,7 +198,7 @@ def delete_blacklist_id(domain_id):
 
     if refresh:
         pihole.export_hosts()
-        restart_gravity()
+        restart_dns()
 
     return str(error_codes["success"])
 
