@@ -20,8 +20,8 @@
 # IMPORTS
 
 
-from pihole import Pihole
-from flask import Flask
+from pihole import Pihole, restart_gravity, error_codes
+from flask import Flask, request
 import json
 
 
@@ -30,6 +30,14 @@ import json
 
 app = Flask(__name__)
 pihole = Pihole()
+
+
+def error(code, message, fields):
+    return json.dumps({
+        "code": code,
+        "message": message,
+        "fields": fields
+    })
 
 
 @app.errorhandler(404)
@@ -54,6 +62,24 @@ def get_whitelist():
     return json.dumps(result)
 
 
+@app.route("/dns/whitelist", methods=["POST"])
+def post_whitelist():
+    domain = request.form["domain"]
+
+    if domain is not None:
+        refresh = pihole.add_whitelist(domain)
+
+        if refresh:
+            pihole.export_hosts()
+            restart_gravity()
+
+        domain_id = [item.get_id() for item in pihole.get_raw_whitelist()
+                     if item.get_domain() == domain][0]
+
+        return str(domain_id)
+    return error(error_codes["incorrect_params"], "Incorrect parameters", "")
+
+
 @app.route("/dns/blacklist", methods=["GET"])
 def get_blacklist():
     blacklist = pihole.get_raw_blacklist()
@@ -66,6 +92,24 @@ def get_blacklist():
         })
 
     return json.dumps(result)
+
+
+@app.route("/dns/blacklist", methods=["POST"])
+def post_blacklist():
+    domain = request.form["domain"]
+
+    if domain is not None:
+        refresh = pihole.add_blacklist(domain)
+
+        if refresh:
+            pihole.export_hosts()
+            restart_gravity()
+
+        domain_id = [item.get_id() for item in pihole.get_raw_blacklist()
+                     if item.get_domain() == domain][0]
+
+        return str(domain_id)
+    return error(error_codes["incorrect_params"], "Incorrect parameters", "")
 
 
 if __name__ == "__main__":
