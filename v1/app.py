@@ -32,6 +32,11 @@ app = Flask(__name__)
 pihole = Pihole()
 
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return open("/var/www/html/pihole/index.html").read()
+
+
 # DNS
 
 
