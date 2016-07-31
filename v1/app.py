@@ -32,6 +32,9 @@ app = Flask(__name__)
 pihole = Pihole()
 
 
+# DNS
+
+
 @app.route("/dns/whitelist", methods=["GET"])
 def get_whitelist():
     whitelist = pihole.get_raw_whitelist()
