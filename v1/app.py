@@ -58,6 +58,19 @@ def handle_error(e):
     return error("unknown", "Unknown error")
 
 
+@app.route("/codes", methods=["GET"])
+def get_codes():
+    result = []
+
+    for key in error_codes:
+        result.append({
+            "name": key,
+            "value": error_codes[key]
+        })
+
+    return json.dumps(result)
+
+
 # DNS
 
 
