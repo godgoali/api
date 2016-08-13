@@ -203,3 +203,22 @@ def delete_blacklist_id(domain_id):
         restart_dns()
 
     return str(error_codes["success"])
+
+
+@app.route("/dns/history", methods=["GET"])
+def get_history():
+    pihole = Pihole()
+
+    history = pihole.get_log()
+
+    result = []
+    for query in history:
+        result.append({
+            "time": int(query.get_time().timestamp()),
+            "domain": query.get_domain(),
+            "client": query.get_client(),
+            "queryType": query.get_record_type(),
+            "blocked": query.was_blocked()
+        })
+
+    return json.dumps(result)
