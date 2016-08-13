@@ -40,6 +40,8 @@ def error(code, message):
 
 
 def restart_dns():
+    # We can set www-data to only have sudo access to the pihole command, just like before
+    # If we tried calling restart_gravity here, it wouldn't be as clean
     call(["sudo", "pihole", "refresh"])
 
 
