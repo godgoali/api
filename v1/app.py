@@ -207,6 +207,9 @@ def delete_blacklist_id(domain_id):
 
 @app.route("/dns/history", methods=["GET"])
 def get_history():
+    """
+    :return: Raw query log
+    """
     pihole = Pihole()
     history = pihole.get_log()
 
@@ -225,11 +228,17 @@ def get_history():
 
 @app.route("/dns/history/<int:from_time>/<int:until_time>")
 def get_filtered_history(from_time, until_time):
+    """
+    :param from_time: UNIX timestamp (inclusive)
+    :param until_time: UNIX timestamp (inclusive)
+    :return: Raw queries within timestamps
+    """
     pihole = Pihole()
     history = pihole.get_log()
 
     result = []
     for query in history:
+        # Convert query time to UNIX timestamp
         time = int(query.get_time().timestamp())
 
         if from_time <= time <= until_time:
