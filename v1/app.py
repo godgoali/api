@@ -33,6 +33,11 @@ app = Flask(__name__)
 
 
 def error(code, message):
+    """
+    :param code: Status code
+    :param message: Message usable in UI
+    :return: JSON to output
+    """
     return json.dumps({
         "code": error_codes[code],
         "message": message
@@ -45,17 +50,36 @@ def restart_dns():
 
 @app.errorhandler(404)
 def page_not_found(e):
+    # Returns the Pi-hole block page
     return open("/var/www/html/pihole/index.html").read()
 
 
 @app.errorhandler(400)
 def unknown_action(e):
+    # Returned if an unknown url or set of parameters are used
     return error("incorrect_params", "Unknown action or incorrect params")
 
 
 @app.errorhandler(500)
 def handle_error(e):
+    # Returned if some internal error occurred
     return error("unknown", "Unknown error")
+
+
+@app.route("/codes", methods=["GET"])
+def get_codes():
+    """
+    :return: The status codes that might be returned by this API
+    """
+    result = []
+
+    for key in error_codes:
+        result.append({
+            "name": key,
+            "value": error_codes[key]
+        })
+
+    return json.dumps(result)
 
 
 # DNS
@@ -63,6 +87,9 @@ def handle_error(e):
 
 @app.route("/dns/whitelist", methods=["GET"])
 def get_whitelist():
+    """
+    :return: The whitelist
+    """
     pihole = Pihole()
     whitelist = pihole.get_raw_whitelist()
 
@@ -78,12 +105,17 @@ def get_whitelist():
 
 @app.route("/dns/whitelist", methods=["POST"])
 def post_whitelist():
+    """
+    Add to the whitelist
+    :return: The id of the added domain
+    """
     pihole = Pihole()
     domain = request.form["domain"]
 
     refresh = pihole.add_whitelist(domain)
 
     if refresh:
+        # The list needs to be updated
         pihole.export_hosts()
         restart_dns()
 
@@ -95,10 +127,15 @@ def post_whitelist():
 
 @app.route("/dns/whitelist/<int:domain_id>", methods=["GET"])
 def get_whitelist_id(domain_id):
+    """
+    :param domain_id: ID of domain
+    :return: Information on the whitelist entry
+    """
     pihole = Pihole()
 
     domains = [item for item in pihole.get_raw_whitelist() if item.get_id() == domain_id]
 
+    # Make sure that there's only one domain
     if len(domains) == 0:
         return error("does_not_exist", "No domain found for that id")
     elif len(domains) > 1:
@@ -114,10 +151,16 @@ def get_whitelist_id(domain_id):
 
 @app.route("/dns/whitelist/<int:domain_id>", methods=["DELETE"])
 def delete_whitelist_id(domain_id):
+    """
+    Delete from the whitelist
+    :param domain_id: ID of domain to delete
+    :return: Status code (usually success)
+    """
     pihole = Pihole()
     domains = [item.get_domain() for item in pihole.get_raw_whitelist()
                if item.get_id() == domain_id]
 
+    # Make sure that there's only one domain
     if len(domains) == 0:
         return error("does_not_exist", "No domain found for that id")
     elif len(domains) > 1:
@@ -126,6 +169,7 @@ def delete_whitelist_id(domain_id):
     refresh = pihole.remove_whitelist(domains[0])
 
     if refresh:
+        # The list needs to be updated
         pihole.export_hosts()
         restart_dns()
 
@@ -134,6 +178,9 @@ def delete_whitelist_id(domain_id):
 
 @app.route("/dns/blacklist", methods=["GET"])
 def get_blacklist():
+    """
+    :return: The blacklist
+    """
     pihole = Pihole()
     blacklist = pihole.get_raw_blacklist()
 
@@ -149,12 +196,17 @@ def get_blacklist():
 
 @app.route("/dns/blacklist", methods=["POST"])
 def post_blacklist():
+    """
+    Add to the blacklist
+    :return: The id of the added domain
+    """
     pihole = Pihole()
     domain = request.form["domain"]
 
     refresh = pihole.add_blacklist(domain)
 
     if refresh:
+        # The list needs to be updated
         pihole.export_hosts()
         restart_dns()
 
@@ -166,10 +218,15 @@ def post_blacklist():
 
 @app.route("/dns/blacklist/<int:domain_id>", methods=["GET"])
 def get_blacklist_id(domain_id):
+    """
+    :param domain_id: ID of domain
+    :return: Information on the blacklist entry
+    """
     pihole = Pihole()
 
     domains = [item for item in pihole.get_raw_blacklist() if item.get_id() == domain_id]
 
+    # Make sure that there's only one domain
     if len(domains) == 0:
         return error("does_not_exist", "No domain found for that id")
     elif len(domains) > 1:
@@ -185,10 +242,16 @@ def get_blacklist_id(domain_id):
 
 @app.route("/dns/blacklist/<int:domain_id>", methods=["DELETE"])
 def delete_blacklist_id(domain_id):
+    """
+    Delete from the blacklist
+    :param domain_id: ID of domain to delete
+    :return: Status code (usually success)
+    """
     pihole = Pihole()
     domains = [item.get_domain() for item in pihole.get_raw_blacklist()
                if item.get_id() == domain_id]
 
+    # Make sure that there's only one domain
     if len(domains) == 0:
         return error("does_not_exist", "No domain found for that id")
     elif len(domains) > 1:
@@ -197,6 +260,7 @@ def delete_blacklist_id(domain_id):
     refresh = pihole.remove_blacklist(domains[0])
 
     if refresh:
+        # The list needs to be updated
         pihole.export_hosts()
         restart_dns()
 
