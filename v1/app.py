@@ -45,6 +45,8 @@ def error(code, message):
 
 
 def restart_dns():
+    # We can set www-data to only have sudo access to the pihole command, just like before
+    # If we tried calling restart_gravity here, it wouldn't be as clean
     call(["sudo", "pihole", "refresh"])
 
 
@@ -265,3 +267,51 @@ def delete_blacklist_id(domain_id):
         restart_dns()
 
     return str(error_codes["success"])
+
+
+@app.route("/dns/history", methods=["GET"])
+def get_history():
+    """
+    :return: Raw query log
+    """
+    pihole = Pihole()
+    history = pihole.get_log()
+
+    result = []
+    for query in history:
+        result.append({
+            "time": int(query.get_time().timestamp()),
+            "domain": query.get_domain(),
+            "client": query.get_client(),
+            "queryType": query.get_record_type(),
+            "blocked": query.was_blocked()
+        })
+
+    return json.dumps(result)
+
+
+@app.route("/dns/history/<int:from_time>/<int:until_time>")
+def get_filtered_history(from_time, until_time):
+    """
+    :param from_time: UNIX timestamp (inclusive)
+    :param until_time: UNIX timestamp (inclusive)
+    :return: Raw queries within timestamps
+    """
+    pihole = Pihole()
+    history = pihole.get_log()
+
+    result = []
+    for query in history:
+        # Convert query time to UNIX timestamp
+        time = int(query.get_time().timestamp())
+
+        if from_time <= time <= until_time:
+            result.append({
+                "time": time,
+                "domain": query.get_domain(),
+                "client": query.get_client(),
+                "queryType": query.get_record_type(),
+                "blocked": query.was_blocked()
+            })
+
+    return json.dumps(result)
