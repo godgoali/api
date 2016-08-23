@@ -293,7 +293,7 @@ def get_history():
     return json.dumps(result)
 
 
-@app.route("/dns/history/<int:from_time>/<int:until_time>")
+@app.route("/dns/history/<int:from_time>/<int:until_time>", methods=["GET"])
 def get_filtered_history(from_time, until_time):
     """
     :param from_time: UNIX timestamp (inclusive)
