@@ -269,6 +269,9 @@ def delete_blacklist_id(domain_id):
     return str(error_codes["success"])
 
 
+# History
+
+
 @app.route("/dns/history", methods=["GET"])
 def get_history():
     """
@@ -315,3 +318,6 @@ def get_filtered_history(from_time, until_time):
             })
 
     return json.dumps(result)
+
+
+# Stats
