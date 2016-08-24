@@ -321,3 +321,29 @@ def get_filtered_history(from_time, until_time):
 
 
 # Stats
+
+
+@app.route("/dns/stats/querytypes", methods=["GET"])
+def get_query_types():
+    pihole = Pihole()
+    history = pihole.get_log()
+
+    result = []
+    for query in history:
+        type_dict = [t for t in result if t["label"] == query.get_record_type()]
+
+        # If we haven't added this type before, add it
+        if len(type_dict) == 0:
+            result.append({
+                "label": query.get_record_type(),
+                "value": 1
+            })
+        elif len(type_dict) == 1:
+            # Get the inner dictionary and add one to it
+            type_dict = type_dict[0]
+            type_dict["value"] += 1
+        else:
+            # There shouldn't be more than 1 dictionary for each type
+            return error("unknown", "Unknown error")
+
+    return json.dumps(result)
