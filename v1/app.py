@@ -373,3 +373,29 @@ def get_top_advertisers():
             return error("unknown", "Unknown error")
 
     return json.dumps(result)
+
+
+@app.route("/dns/stats/top_clients", methods=["GET"])
+def get_top_clients():
+    pihole = Pihole()
+    history = pihole.get_log()
+
+    result = []
+    for query in history:
+        clients = [client for client in result if client["label"] == query.get_client()]
+
+        # If we haven't added this client before, add it
+        if len(clients) == 0:
+            result.append({
+                "label": query.get_client(),
+                "value": 1
+            })
+        elif len(clients) == 1:
+            # Get the inner dictionary and add one to it
+            client = clients[0]
+            client["value"] += 1
+        else:
+            # There shouldn't be more than 1 dictionary for each client
+            return error("unknown", "Unknown error")
+
+    return json.dumps(result)
