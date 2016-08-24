@@ -50,6 +50,34 @@ def restart_dns():
     call(["sudo", "pihole", "refresh"])
 
 
+def get_top(pihole, skip_unblocked, query_filter):
+    history = pihole.get_log()
+
+    result = []
+    for query in history:
+        # Skip all legit traffic if flag is set
+        if skip_unblocked and not query.was_blocked():
+            continue
+
+        items = [item for item in result if item["label"] == query_filter(query)]
+
+        # If we haven't added this item before, add it
+        if len(items) == 0:
+            result.append({
+                "label": query_filter(query),
+                "value": 1
+            })
+        elif len(items) == 1:
+            # Get the inner dictionary and add one to it
+            domain = items[0]
+            domain["value"] += 1
+        else:
+            # There shouldn't be more than 1 dictionary for each item
+            return error("unknown", "Unknown error")
+
+    return json.dumps(result)
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     # Returns the Pi-hole block page
@@ -323,109 +351,21 @@ def get_filtered_history(from_time, until_time):
 # Stats
 
 
-@app.route("/dns/stats/querytypes", methods=["GET"])
+@app.route("/dns/stats/query_types", methods=["GET"])
 def get_query_types():
-    pihole = Pihole()
-    history = pihole.get_log()
-
-    result = []
-    for query in history:
-        type_dict = [t for t in result if t["label"] == query.get_record_type()]
-
-        # If we haven't added this type before, add it
-        if len(type_dict) == 0:
-            result.append({
-                "label": query.get_record_type(),
-                "value": 1
-            })
-        elif len(type_dict) == 1:
-            # Get the inner dictionary and add one to it
-            type_dict = type_dict[0]
-            type_dict["value"] += 1
-        else:
-            # There shouldn't be more than 1 dictionary for each type
-            return error("unknown", "Unknown error")
-
-    return json.dumps(result)
+    return get_top(Pihole(), False, lambda q: q.get_record_type())
 
 
 @app.route("/dns/stats/top_advertisers", methods=["GET"])
 def get_top_advertisers():
-    pihole = Pihole()
-    history = pihole.get_log()
-
-    result = []
-    for query in history:
-        # Skip all legit traffic
-        if not query.was_blocked():
-            continue
-
-        domains = [domain for domain in result if domain["label"] == query.get_domain()]
-
-        # If we haven't added this domain before, add it
-        if len(domains) == 0:
-            result.append({
-                "label": query.get_domain(),
-                "value": 1
-            })
-        elif len(domains) == 1:
-            # Get the inner dictionary and add one to it
-            domain = domains[0]
-            domain["value"] += 1
-        else:
-            # There shouldn't be more than 1 dictionary for each domain
-            return error("unknown", "Unknown error")
-
-    return json.dumps(result)
+    return get_top(Pihole(), True, lambda q: q.get_domain())
 
 
 @app.route("/dns/stats/top_clients", methods=["GET"])
 def get_top_clients():
-    pihole = Pihole()
-    history = pihole.get_log()
-
-    result = []
-    for query in history:
-        clients = [client for client in result if client["label"] == query.get_client()]
-
-        # If we haven't added this client before, add it
-        if len(clients) == 0:
-            result.append({
-                "label": query.get_client(),
-                "value": 1
-            })
-        elif len(clients) == 1:
-            # Get the inner dictionary and add one to it
-            client = clients[0]
-            client["value"] += 1
-        else:
-            # There shouldn't be more than 1 dictionary for each client
-            return error("unknown", "Unknown error")
-
-    return json.dumps(result)
+    return get_top(Pihole(), False, lambda q: q.get_client())
 
 
 @app.route("/dns/stats/top_domains", methods=["GET"])
 def get_top_domains():
-    pihole = Pihole()
-    history = pihole.get_log()
-
-    result = []
-    for query in history:
-        domains = [domain for domain in result if domain["label"] == query.get_domain()]
-
-        # If we haven't added this domain before, add it
-        if len(domains) == 0:
-            result.append({
-                "label": query.get_domain(),
-                "value": 1
-            })
-        elif len(domains) == 1:
-            # Get the inner dictionary and add one to it
-            domain = domains[0]
-            domain["value"] += 1
-        else:
-            # There shouldn't be more than 1 dictionary for each domain
-            return error("unknown", "Unknown error")
-
-    return json.dumps(result)
+    return get_top(Pihole(), False, lambda q: q.get_domain())
