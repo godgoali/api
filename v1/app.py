@@ -356,6 +356,10 @@ def get_top_advertisers():
 
     result = []
     for query in history:
+        # Skip all legit traffic
+        if not query.was_blocked():
+            continue
+
         domains = [domain for domain in result if domain["label"] == query.get_domain()]
 
         # If we haven't added this domain before, add it
