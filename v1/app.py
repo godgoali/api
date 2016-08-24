@@ -403,3 +403,29 @@ def get_top_clients():
             return error("unknown", "Unknown error")
 
     return json.dumps(result)
+
+
+@app.route("/dns/stats/top_domains", methods=["GET"])
+def get_top_domains():
+    pihole = Pihole()
+    history = pihole.get_log()
+
+    result = []
+    for query in history:
+        domains = [domain for domain in result if domain["label"] == query.get_domain()]
+
+        # If we haven't added this domain before, add it
+        if len(domains) == 0:
+            result.append({
+                "label": query.get_domain(),
+                "value": 1
+            })
+        elif len(domains) == 1:
+            # Get the inner dictionary and add one to it
+            domain = domains[0]
+            domain["value"] += 1
+        else:
+            # There shouldn't be more than 1 dictionary for each domain
+            return error("unknown", "Unknown error")
+
+    return json.dumps(result)
